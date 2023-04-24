@@ -1,0 +1,11 @@
+﻿  Main.cpp
+Main.obj : error LNK2019: unresolved external symbol _glfwInit referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwTerminate referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwWindowHint referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwCreateWindow referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwWindowShouldClose referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwPollEvents referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwMakeContextCurrent referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwSwapBuffers referenced in function _main
+Main.obj : error LNK2019: unresolved external symbol _glfwGetProcAddress referenced in function _main
+D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\Debug\GraphPro.exe : fatal error LNK1120: 9 unresolved externals
