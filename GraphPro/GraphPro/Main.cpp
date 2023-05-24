@@ -57,13 +57,15 @@ int main()
     int triangleSize, triangleIndexCount;
     createGeometry(triangleVAO, triangleEBO, triangleSize, triangleIndexCount);
 
-    GLuint boxTex = loadTexture("textures/brick.png");
-    GLuint boxNormal = loadTexture("textures/brick_normal.png");
+    GLuint boxTex = loadTexture("textures/container2.png");
+    GLuint boxNormal = loadTexture("textures/container2_normal.png");
+    GLuint boxSpecular = loadTexture("textures/container2_specular.png");
 
     //set texture channels
     glUseProgram(simpleProgram);
     glUniform1i(glGetUniformLocation(simpleProgram, "mainTex"), 0);
     glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
+    glUniform1i(glGetUniformLocation(simpleProgram, "specularTex"), 2);
 
 
     //create gl viewport
@@ -121,6 +123,8 @@ int main()
         glBindTexture(GL_TEXTURE_2D, boxTex);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, boxNormal);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, boxSpecular);
 
         // create transformations
         glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first

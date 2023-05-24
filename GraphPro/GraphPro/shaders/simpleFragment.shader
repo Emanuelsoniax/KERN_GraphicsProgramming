@@ -8,6 +8,7 @@ in vec3 worldPosition;
 
 uniform sampler2D mainTex;
 uniform sampler2D normalTex;
+uniform sampler2D specularTex;
 
 uniform vec3 lightPosition;
 uniform vec3 cameraPosition;
@@ -31,11 +32,11 @@ void main(){
 
 	//lighting
 	float lightValue = max(-dot(normal, lightDirection), 0.0);
-	float specular = pow(max(-dot(reflDir, viewDir), 0.0), 64);
+	float specular = pow(max(-dot(reflDir, viewDir), 0.0), 8);
 
 	//seperate RGB and RGBA
 	vec4 output = vec4(color, 1.0) * texture(mainTex, uv);
-	output.rgb = output.rgb * min(lightValue + 0.1, 1.0) + specular * output.rgb;
+	output.rgb = output.rgb * min(lightValue + 0.1, 1.0) + vec3(texture(specularTex, uv) * specular) * output.rgb;
 
 	FragColor = output;
 
