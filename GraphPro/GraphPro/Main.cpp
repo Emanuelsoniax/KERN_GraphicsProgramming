@@ -25,7 +25,7 @@ GLuint loadTexture(const char* path);
 void loadFile(const char* filename, char*& output);
 
 //program IDs
-GLuint simpleProgram;
+GLuint simpleProgram, skyProgram;
 
 const int WIDTH = 1280, HEIGHT = 720;
 
@@ -253,6 +253,7 @@ void createGeometry(GLuint& VAO,GLuint &EBO , int& size, int& numIndices)
 void createShaders()
 {
     createProgram(simpleProgram, "shaders/simpleVertext.shader", "shaders/simpleFragment.shader");
+    createProgram(skyProgram, "shaders/skyVertexShader.shader", "shaders/skyFragmentShader.shader");
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) {
