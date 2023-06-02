@@ -31,12 +31,12 @@ void main(){
 	vec3 reflDir = normalize(reflect(lightDirection, normal));
 
 	//lighting
-	float lightValue = max(-dot(normal, lightDirection), 0.0);
-	float specular = pow(max(-dot(reflDir, viewDir), 0.0), 8);
+	float diffuse = max(-dot(normal, lightDirection), 0.0);
+	float specular = pow(max(-dot(reflDir, viewDir), 0.0), 2);
 
 	//seperate RGB and RGBA
 	vec4 output = vec4(color, 1.0) * texture(mainTex, uv);
-	output.rgb = output.rgb * min(lightValue + 0.1, 1.0) + vec3(texture(specularTex, uv) * specular) * output.rgb;
+	output.rgb = output.rgb * min(diffuse + 0.1, 1.0) + vec3(texture(specularTex, uv) * specular);
 
 	FragColor = output;
 
