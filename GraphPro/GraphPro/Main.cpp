@@ -9,6 +9,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "camera.h"
+#include "Skybox.h"
+#include "Cube.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -20,12 +22,9 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow* window);
 int init(GLFWwindow* &window);
 
-void createGeometry(GLuint& VAO,GLuint &EBO , int& size, int& numIndices);
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path);
-void renderSkyBox();
-void renderCube();
 
 //util
 void loadFile(const char* filename, char*& output);
@@ -65,7 +64,10 @@ int main()
     }
     
     createShaders();
-    createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
+
+    Skybox skybox = Skybox(skyProgram);
+    Cube crate = Cube(simpleProgram, glm::vec3(0, 0, 0), loadTexture("textures/container2.png"), loadTexture("textures/container2_normal.png"), loadTexture("textures/container2_specular.png"));
+    Cube brick = Cube(simpleProgram, glm::vec3(-1.5f, -2.2f, -2.5f), loadTexture("textures/brick.png"), loadTexture("textures/brick_normal.png"));
 
     //create gl viewport
     glViewport(0, 0, WIDTH, HEIGHT);
@@ -87,8 +89,9 @@ int main()
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        renderSkyBox();
-        renderCube();
+        skybox.renderSkyBox(camera, lightDirection, projection);
+        brick.renderCube(camera, lightDirection, projection);
+        crate.renderCube(camera, lightDirection, projection);
 
         //buffers swappen
         glfwSwapBuffers(window);
@@ -99,87 +102,6 @@ int main()
 
     glfwTerminate();
     return 0;
-}
-
-void renderSkyBox() {
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
-
-    //createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
-
-    glUseProgram(skyProgram);
-    //matrices
-    glm::mat4 world = glm::mat4(1.0f);
-    world = glm::translate(world, camera.Position);
-    world = glm::scale(world, glm::vec3(100, 100, 100));
-
-    glUniformMatrix4fv(glGetUniformLocation(skyProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-    glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(skyProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-    glUniform3fv(glGetUniformLocation(skyProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
-    glUniform3fv(glGetUniformLocation(skyProgram, "cameraPosition"), 1, glm::value_ptr(camera.Position));
-
-    //rendering
-    glBindVertexArray(boxVAO);
-    glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
-
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-}
-
-void renderCube() {
-    glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
-
-    glCullFace(GL_BACK); 
-
-    glUseProgram(simpleProgram);
-
-    GLuint boxTex = loadTexture("textures/container2.png");
-    GLuint boxNormal = loadTexture("textures/container2_normal.png");
-    GLuint boxSpecular = loadTexture("textures/container2_specular.png");
-    //set texture channels
-
-    glUniform1i(glGetUniformLocation(simpleProgram, "mainTex"), 0);
-    glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
-    glUniform1i(glGetUniformLocation(simpleProgram, "specularTex"), 2);
-
-    //matrices
-    glm::mat4 world = glm::mat4(0.0f);
-    world = glm::rotate(world, glm::radians(45.0f), glm::vec3(0, 1, 0));
-    world = glm::scale(world, glm::vec3(1, 1, 1));
-    world = glm::translate(world, camera.Position);
-
-    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-    glUniform3fv(glGetUniformLocation(simpleProgram, "lightPosition"), 1, glm::value_ptr(lightDirection));
-    glUniform3fv(glGetUniformLocation(simpleProgram, "cameraPosition"), 1, glm::value_ptr(camera.Position));
-
-    //bind textures
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, boxTex);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, boxNormal);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, boxSpecular);
-
-    //// create transformations
-    glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-    //transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-    //transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-
-    // get matrix's uniform location and set matrix
-    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(transform));
-
-
-    glBindVertexArray(boxVAO);
-    glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
-
-    glDisable(GL_DEPTH_TEST);
-    glDisable(GL_CULL_FACE);
 }
 
 void processInput(GLFWwindow* window)
@@ -270,111 +192,6 @@ int init(GLFWwindow*& window)
     }
 
     return 0;
-}
-
-void createGeometry(GLuint& VAO,GLuint &EBO , int& size, int& numIndices)
-{
-    // need 24 vertices for normal/uv-mapped Cube
-    float vertices[] = {
-        // positions            //colors            // tex coords   // normals          //tangents      //bitangents
-        0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, -1.f, 0.f,     -1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-
-        0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
-        0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   1.f, 0.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
-
-        0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
-        -0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
-
-        -0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 0.f,      -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   0.f, 1.f,      -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
-
-        -0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   0.f, 1.f,      0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
-        0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,      0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
-
-        -0.5f, 0.5f, -.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, 0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-
-        0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   1.f, 1.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
-        -0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, 0.f, 1.f,     1.f, 0.f, 0.f,  0.f, -1.f, 0.f,
-
-        -0.5f, -0.5f, 0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
-        -0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   1.f, 1.f,       -1.f, 0.f, 0.f,     0.f, 1.f, 0.f,  0.f, 0.f, 1.f,
-
-        -0.5f, -0.5f, -.5f,     1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
-        0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   1.f, 0.f,       0.f, 0.f, -1.f,     1.f, 0.f, 0.f,  0.f, 1.f, 0.f,
-
-        0.5f, -0.5f, -0.5f,     1.0f, 1.0f, 1.0f,   0.f, 1.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
-        0.5f, -0.5f, 0.5f,      1.0f, 1.0f, 1.0f,   0.f, 0.f,       1.f, 0.f, 0.f,     0.f, -1.f, 0.f,  0.f, 0.f, 1.f,
-
-        0.5f, 0.5f, -0.5f,      1.0f, 1.0f, 1.0f,   0.f, 1.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f,
-        0.5f, 0.5f, 0.5f,       1.0f, 1.0f, 1.0f,   0.f, 0.f,       0.f, 1.f, 0.f,     1.f, 0.f, 0.f,  0.f, 0.f, 1.f
-    };
-
-    unsigned int indices[] = {  // note that we start from 0!
-        // DOWN
-        0, 1, 2,   // first triangle
-        0, 2, 3,    // second triangle
-        // BACK
-        14, 6, 7,   // first triangle
-        14, 7, 15,    // second triangle
-        // RIGHT
-        20, 4, 5,   // first triangle
-        20, 5, 21,    // second triangle
-        // LEFT
-        16, 8, 9,   // first triangle
-        16, 9, 17,    // second triangle
-        // FRONT
-        18, 10, 11,   // first triangle
-        18, 11, 19,    // second triangle
-        // UP
-        22, 12, 13,   // first triangle
-        22, 13, 23,    // second triangle
-    };
-
-
-    int stride = (3 +3 + 2 + 3 + 3 + 3) * sizeof(float);
-    size = sizeof(vertices) / stride;
-    numIndices = sizeof(indices) / sizeof(int);
-
-    //buffers
-    //referentie naar de vertex array
-    glGenVertexArrays(1, &VAO);
-    //configuratie id, binding
-    glBindVertexArray(VAO);
-
-    GLuint VBO;
-    glGenBuffers(1, &VBO);
-    //configuratie id, binding
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &EBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    //layout data
-    //positions
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
-    glEnableVertexAttribArray(0);
-    //colors
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-    //uvs
-    glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, stride, (void*)(6 * sizeof(float)));
-    glEnableVertexAttribArray(2);
-    //normals
-    glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, stride, (void*)(8 * sizeof(float)));
-    glEnableVertexAttribArray(3);
-
-    glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, stride, (void*)(11 * sizeof(float)));
-    glEnableVertexAttribArray(4);
-
-    glVertexAttribPointer(5, 3, GL_FLOAT, GL_FALSE, stride, (void*)(14 * sizeof(float)));
-    glEnableVertexAttribArray(5);
-
 }
 
 void createShaders()

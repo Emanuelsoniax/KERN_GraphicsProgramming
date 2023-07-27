@@ -1,3 +1,5 @@
-﻿  Main.cpp
-D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\GraphPro\Main.cpp(446,20): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
+﻿  Cube.cpp
+  Main.cpp
+D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\GraphPro\Main.cpp(263,20): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
+  Generating Code...
   GraphPro.vcxproj -> D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\x64\Debug\GraphPro.exe
