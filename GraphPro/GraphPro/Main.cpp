@@ -24,6 +24,8 @@ void createGeometry(GLuint& VAO,GLuint &EBO , int& size, int& numIndices);
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
 GLuint loadTexture(const char* path);
+void renderSkyBox();
+void renderCube();
 
 //util
 void loadFile(const char* filename, char*& output);
@@ -39,9 +41,20 @@ float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
 
+//light
+glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
+glm::vec3 cameraPosition = glm::vec3(0.0f, 2.5f, -5.0f);
+
+glm::mat4 view, projection;
+
+
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+
+//geometry data
+GLuint boxVAO, boxEBO;
+int boxSize, boxIndexCount;
 
 int main()
 {
@@ -53,35 +66,10 @@ int main()
     
     createShaders();
 
-    GLuint triangleVAO, triangleEBO;
-    int triangleSize, triangleIndexCount;
-    createGeometry(triangleVAO, triangleEBO, triangleSize, triangleIndexCount);
-
-    GLuint boxTex = loadTexture("textures/container2.png");
-    GLuint boxNormal = loadTexture("textures/container2_normal.png");
-    GLuint boxSpecular = loadTexture("textures/container2_specular.png");
-
-    //set texture channels
-    glUseProgram(simpleProgram);
-    glUniform1i(glGetUniformLocation(simpleProgram, "mainTex"), 0);
-    glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
-    glUniform1i(glGetUniformLocation(simpleProgram, "specularTex"), 2);
-
+    createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
     //create gl viewport
     glViewport(0, 0, WIDTH, HEIGHT);
-
-    glm::vec3 lightPosition = glm::vec3(0, 2.5f, 5.0f);
-
-    //matrices
-    glm::mat4 world = glm::mat4(0.0f);
-    world = glm::rotate(world, glm::radians(45.0f), glm::vec3(0, 1, 0));
-    world = glm::scale(world, glm::vec3(1, 1, 1));
-    world = glm::translate(world, glm::vec3(0, 0, 0));
-
-
-    glm::mat4 projection = glm::perspective(glm::radians(35.0f), WIDTH / (float)HEIGHT, 0.1f, 100.0f);
-
 
     //render loop
     while (!glfwWindowShouldClose(window)) {
@@ -89,54 +77,28 @@ int main()
         processInput(window);
 
         // per-frame time logic
-       // --------------------
+        // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        //set camera position
-        // pass projection matrix to shader (note that in this case it could change every frame)
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
 
+        //matrices
+        //set camera position
+        //pass projection matrix to shader (note that in this case it could change every frame)
+        projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
         // camera/view transformation
-        glm::mat4 view = camera.GetViewMatrix();
+        view = camera.GetViewMatrix();
 
         //events pollen
         glfwPollEvents();
 
         //rendering
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-        glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glUseProgram(simpleProgram);
-
-        glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-        glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-        glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-        glUniform3fv(glGetUniformLocation(simpleProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
-        glUniform3fv(glGetUniformLocation(simpleProgram, "cameraPosition"), 1, glm::value_ptr(camera.Position));
-
-        //bind textures
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, boxTex);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, boxNormal);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, boxSpecular);
-
-        // create transformations
-        glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
-        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-
-        // get matrix's uniform location and set matrix
-        glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(transform));
-
-
-        glBindVertexArray(triangleVAO);
-        glDrawElements(GL_TRIANGLES, triangleIndexCount, GL_UNSIGNED_INT, 0);
+        renderSkyBox();
+        renderCube();
 
         //buffers swappen
         glfwSwapBuffers(window);
@@ -145,6 +107,81 @@ int main()
 
     glfwTerminate();
     return 0;
+}
+
+void renderSkyBox() {
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+
+    //createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
+
+    glUseProgram(skyProgram);
+    //matrices
+    glm::mat4 world = glm::mat4(1.0f);
+    world = glm::translate(world, camera.Position);
+    world = glm::scale(world, glm::vec3(1, 1, 1));
+
+    glUniformMatrix4fv(glGetUniformLocation(skyProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
+    glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(skyProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    glUniform3fv(glGetUniformLocation(skyProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
+    glUniform3fv(glGetUniformLocation(skyProgram, "cameraPosition"), 1, glm::value_ptr(camera.Position));
+
+    //rendering
+    glBindVertexArray(boxVAO);
+    glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
+}
+
+void renderCube() {
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
+    glCullFace(GL_BACK); 
+
+    glUseProgram(simpleProgram);
+
+    GLuint boxTex = loadTexture("textures/container2.png");
+    GLuint boxNormal = loadTexture("textures/container2_normal.png");
+    GLuint boxSpecular = loadTexture("textures/container2_specular.png");
+    //set texture channels
+
+    glUniform1i(glGetUniformLocation(simpleProgram, "mainTex"), 0);
+    glUniform1i(glGetUniformLocation(simpleProgram, "normalTex"), 1);
+    glUniform1i(glGetUniformLocation(simpleProgram, "specularTex"), 2);
+
+    //matrices
+    glm::mat4 world = glm::mat4(0.0f);
+    world = glm::rotate(world, glm::radians(45.0f), glm::vec3(0, 1, 0));
+    world = glm::scale(world, glm::vec3(1, 1, 1));
+    world = glm::translate(world, camera.Position);
+
+    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
+    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    glUniform3fv(glGetUniformLocation(simpleProgram, "lightPosition"), 1, glm::value_ptr(lightDirection));
+    glUniform3fv(glGetUniformLocation(simpleProgram, "cameraPosition"), 1, glm::value_ptr(camera.Position));
+
+    //bind textures
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, boxTex);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, boxNormal);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, boxSpecular);
+
+    //// create transformations
+    glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+    //transform = glm::translate(transform, glm::vec3(0.5f, -0.5f, 0.0f));
+    //transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+
+    // get matrix's uniform location and set matrix
+    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(transform));
+
+
+    glBindVertexArray(boxVAO);
+    glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
 }
 
 void processInput(GLFWwindow* window)
@@ -165,7 +202,6 @@ void processInput(GLFWwindow* window)
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
-// ---------------------------------------------------------------------------------------------
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 
@@ -173,9 +209,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-
 // glfw: whenever the mouse moves, this callback is called
-// -------------------------------------------------------
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
     float xpos = static_cast<float>(xposIn);
@@ -198,7 +232,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
-// ----------------------------------------------------------------------
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
