@@ -42,7 +42,7 @@ float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
 
 //light
-glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
+glm::vec3 lightDirection = glm::normalize(glm::vec3(-0.5f, 1.0f, -0.5f));
 glm::vec3 cameraPosition = glm::vec3(0.0f, 2.5f, -5.0f);
 
 glm::mat4 view, projection;
@@ -65,7 +65,6 @@ int main()
     }
     
     createShaders();
-
     createGeometry(boxVAO, boxEBO, boxSize, boxIndexCount);
 
     //create gl viewport
@@ -77,21 +76,12 @@ int main()
         processInput(window);
 
         // per-frame time logic
-        // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-
-        //matrices
-        //set camera position
         //pass projection matrix to shader (note that in this case it could change every frame)
         projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 100.0f);
-        // camera/view transformation
-        view = camera.GetViewMatrix();
-
-        //events pollen
-        glfwPollEvents();
 
         //rendering
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -102,6 +92,8 @@ int main()
 
         //buffers swappen
         glfwSwapBuffers(window);
+        //events pollen
+        glfwPollEvents();
 
     }
 
@@ -119,10 +111,10 @@ void renderSkyBox() {
     //matrices
     glm::mat4 world = glm::mat4(1.0f);
     world = glm::translate(world, camera.Position);
-    world = glm::scale(world, glm::vec3(1, 1, 1));
+    world = glm::scale(world, glm::vec3(100, 100, 100));
 
     glUniformMatrix4fv(glGetUniformLocation(skyProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-    glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(skyProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
     glUniformMatrix4fv(glGetUniformLocation(skyProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     glUniform3fv(glGetUniformLocation(skyProgram, "lightDirection"), 1, glm::value_ptr(lightDirection));
@@ -131,6 +123,9 @@ void renderSkyBox() {
     //rendering
     glBindVertexArray(boxVAO);
     glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
+
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
 }
 
 void renderCube() {
@@ -157,7 +152,7 @@ void renderCube() {
     world = glm::translate(world, camera.Position);
 
     glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+    glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
     glUniformMatrix4fv(glGetUniformLocation(simpleProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
     glUniform3fv(glGetUniformLocation(simpleProgram, "lightPosition"), 1, glm::value_ptr(lightDirection));
@@ -182,6 +177,9 @@ void renderCube() {
 
     glBindVertexArray(boxVAO);
     glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 }
 
 void processInput(GLFWwindow* window)

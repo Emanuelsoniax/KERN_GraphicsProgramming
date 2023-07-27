@@ -36,7 +36,7 @@ void main(){
 
 	//seperate RGB and RGBA
 	vec4 output = vec4(color, 1.0) * texture(mainTex, uv);
-	output.rgb = output.rgb * min(diffuse + 0.1, 1.0) + vec3(texture(specularTex, uv) * specular);
+	output.rgb = output.rgb * min(diffuse + 0.5, 1.0) + vec3(texture(specularTex, uv) * specular);
 
 	FragColor = output;
 
