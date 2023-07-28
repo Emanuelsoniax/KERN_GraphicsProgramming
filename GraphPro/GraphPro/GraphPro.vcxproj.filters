@@ -33,6 +33,9 @@
     <ClCompile Include="Cube.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Terrain.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\simpleFragment.shader">
@@ -47,6 +50,12 @@
     <None Include="shaders\skyVertexShader.shader">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="shaders\terrainFragmentShader.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\terrainVertexShader.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -59,6 +68,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Cube.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Terrain.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
