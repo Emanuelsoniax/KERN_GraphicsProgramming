@@ -1,4 +1,5 @@
 #pragma once
+#include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 
@@ -13,25 +14,28 @@ class Terrain
 {
 	private:
 	const char* heightmap;
+	const char* normalmap;
 	GLenum format;
-	int comp;
+	int comp = 4;
 	GLuint terrainVAO;
 	GLuint heightmapID;
+	GLuint normalmapID;
 
 	public:
 	GLuint program;
 	int boxSize, indexCount;
 
-	Terrain(GLuint& _program, const char* _heightmap, float _hScale, float _xzScale) {
+	Terrain(GLuint& _program, const char* _heightmap, GLuint _normalmapID, float _hScale, float _xzScale) {
 		program = _program;
 		heightmap = _heightmap;
+		normalmapID = _normalmapID;
 		format = GL_RGBA;
-		comp = 4;
+		//comp = 4;
 
 		terrainVAO = generatePlane(_hScale, _xzScale, indexCount);
 	}
 
-	void renderTerrain(Camera _cam, glm::vec3 _lightDir, glm::mat4 _projection) {
+	void renderTerrain(Camera _cam, glm::vec3 _lightPos, glm::mat4 _projection) {
 		glEnable(GL_DEPTH);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
@@ -39,6 +43,11 @@ class Terrain
 		glCullFace(GL_BACK);
 
 		glUseProgram(program);
+
+		//set texture channels
+		glUniform1i(glGetUniformLocation(program, "mainTex"), 0);
+		glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
+
 		//matrices
 		glm::mat4 world = glm::mat4(1.0f);
 		world = glm::translate(world, glm::vec3(-500, -500, -500));
@@ -48,7 +57,7 @@ class Terrain
 		glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(_cam.GetViewMatrix()));
 		glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(_projection));
 
-		glUniform3fv(glGetUniformLocation(program, "lightDirection"), 1, glm::value_ptr(_lightDir));
+		glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1, glm::value_ptr(_lightPos));
 		glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(_cam.Position));
 		
 		//textures
@@ -56,6 +65,8 @@ class Terrain
 		//glBindTexture(GL_TEXTURE_2D, tex);
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, heightmapID);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, normalmapID);
 
 		//rendering
 		glBindVertexArray(terrainVAO);
@@ -97,9 +108,11 @@ class Terrain
 			int x = i % width;
 			int z = i / width;
 
+			float texHeight = (float)data[i * comp];
+
 			//set position
 			vertices[index++] = x * _xzScale;
-			vertices[index++] = 0;
+			vertices[index++] = (texHeight / 255.0f) * _hScale;
 			vertices[index++] = z * _xzScale;
 
 			//set normal

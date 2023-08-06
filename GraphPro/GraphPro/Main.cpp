@@ -42,7 +42,7 @@ float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
 
 //light
-glm::vec3 lightDirection = glm::normalize(glm::vec3(0.0f, 1.0f, 0.0f));
+glm::vec3 lightPosition = glm::normalize(glm::vec3(-0.5f, 0.5f, -0.5f));
 glm::vec3 cameraPosition = glm::vec3(0.0f, 2.5f, -5.0f);
 
 glm::mat4 view, projection;
@@ -67,7 +67,7 @@ int main()
     Skybox skybox = Skybox(skyProgram);
     Cube crate = Cube(simpleProgram, glm::vec3(0, 0, 0), loadTexture("textures/container2.png"), loadTexture("textures/container2_normal.png"), loadTexture("textures/container2_specular.png"));
     Cube brick = Cube(simpleProgram, glm::vec3(-1.5f, -2.2f, -2.5f), loadTexture("textures/brick.png"), loadTexture("textures/brick_normal.png"));
-    Terrain terrain = Terrain(terrainProgram, "textures/Heightmap2.png", 100.0f, 5.0f);
+    Terrain terrain = Terrain(terrainProgram, "textures/Heightmap2.png", loadTexture("textures/Heightmap2_normal.png"), 250.0f, 5.0f);
 
     //create gl viewport
     glViewport(0, 0, WIDTH, HEIGHT);
@@ -84,13 +84,14 @@ int main()
 
         //pass projection matrix to shader (note that in this case it could change every frame)
         projection = glm::perspective(glm::radians(camera.Zoom), (float)WIDTH / (float)HEIGHT, 0.1f, 4000.0f);
+        lightPosition = glm::normalize(glm::vec3(glm::sin(currentFrame), -0.5, glm::cos(currentFrame)));
 
         //rendering
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        skybox.renderSkyBox(camera, lightDirection, projection);
-        terrain.renderTerrain(camera, lightDirection, projection);
+        skybox.renderSkyBox(camera, lightPosition, projection);
+        terrain.renderTerrain(camera, lightPosition, projection);
         //brick.renderCube(camera, lightDirection, projection);
         //crate.renderCube(camera, lightDirection, projection);
 

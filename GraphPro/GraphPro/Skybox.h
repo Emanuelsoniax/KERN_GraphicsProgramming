@@ -35,7 +35,7 @@ class Skybox
         //matrices
         glm::mat4 world = glm::mat4(1.0f);
         world = glm::translate(world, _cam.Position);
-        world = glm::scale(world, glm::vec3(100, 100, 100));
+        world = glm::scale(world, glm::vec3(1, 1, 1));
 
         glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(world));
         glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(_cam.GetViewMatrix()));
