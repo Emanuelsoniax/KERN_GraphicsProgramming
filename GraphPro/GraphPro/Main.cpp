@@ -25,7 +25,7 @@ int init(GLFWwindow* &window);
 
 void createShaders();
 void createProgram(GLuint& programID, const char* vertex, const char* fragment);
-GLuint loadTexture(const char* path);
+GLuint loadTexture(const char* path, int comp = 0);
 
 //util
 void loadFile(const char* filename, char*& output);
@@ -36,14 +36,13 @@ GLuint simpleProgram, skyProgram, terrainProgram;
 const int WIDTH = 1280, HEIGHT = 720;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
+Camera camera(glm::vec3(0.0f, 500, 0.0f));
 float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
 
 //light
 glm::vec3 lightPosition = glm::normalize(glm::vec3(-0.5f, 0.5f, -0.5f));
-glm::vec3 cameraPosition = glm::vec3(0.0f, 2.5f, -5.0f);
 
 glm::mat4 view, projection;
 
@@ -69,6 +68,8 @@ int main()
     Cube brick = Cube(simpleProgram, glm::vec3(-1.5f, -2.2f, -2.5f), loadTexture("textures/brick.png"), loadTexture("textures/brick_normal.png"));
     Terrain terrain = Terrain(terrainProgram, "textures/Heightmap2.png", loadTexture("textures/Heightmap2_normal.png"), 250.0f, 5.0f);
 
+    terrain.assignTextures(loadTexture("textures/dirt.jpg"), loadTexture("textures/sand.jpg"), loadTexture("textures/grass.png", 4), loadTexture("textures/rock.jpg"), loadTexture("textures/snow.jpg"));
+
     //create gl viewport
     glViewport(0, 0, WIDTH, HEIGHT);
 
@@ -93,7 +94,7 @@ int main()
         skybox.renderSkyBox(camera, lightPosition, projection);
         terrain.renderTerrain(camera, lightPosition, projection);
         //brick.renderCube(camera, lightDirection, projection);
-        //crate.renderCube(camera, lightDirection, projection);
+        //crate.renderCube(camera, lightPosition, projection);
 
         //buffers swappen
         glfwSwapBuffers(window);
@@ -284,7 +285,7 @@ void loadFile(const char* filename, char*& output) {
     }
 }
 
-GLuint loadTexture(const char* path) {
+GLuint loadTexture(const char* path, int comp) {
     
     //Gen & bind ID
     GLuint textureID;
@@ -297,9 +298,11 @@ GLuint loadTexture(const char* path) {
 
     //load texture
     int width, height, numChannels;
-    unsigned char* data = stbi_load(path, &width, &height, &numChannels, 0);
+    unsigned char* data = stbi_load(path, &width, &height, &numChannels, comp);
     //set data
     if (data) {
+        if (comp != 0) numChannels = comp;
+
         if (numChannels == 3) {
             glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
         }

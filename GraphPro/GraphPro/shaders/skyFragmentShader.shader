@@ -22,5 +22,5 @@ void main(){
 	float sun = max(pow(dot(viewDir, lightDir), 128), 0.0);
 
 	//specular data
-	FragColor = vec4(lerp(botColor, topColor, abs(viewDir.y)) + sun * sunColor,1);
+	FragColor = vec4(lerp(botColor, topColor, max(viewDir.y, 0.0)) + sun * sunColor,1);
 }

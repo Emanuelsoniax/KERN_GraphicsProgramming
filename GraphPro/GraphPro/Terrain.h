@@ -21,6 +21,8 @@ class Terrain
 	GLuint heightmapID;
 	GLuint normalmapID;
 
+	GLuint dirt, sand, grass, rock, snow;
+
 	public:
 	GLuint program;
 	int boxSize, indexCount;
@@ -35,6 +37,25 @@ class Terrain
 		terrainVAO = generatePlane(_hScale, _xzScale, indexCount);
 	}
 
+	void assignTextures(GLuint _dirt, GLuint _sand, GLuint _grass, GLuint _rock, GLuint _snow) {
+		dirt = _dirt;
+		sand = _sand;
+		grass = _grass;
+		rock = _rock;
+		snow = _snow;
+
+		glUseProgram(program);
+		//set texture channels
+		glUniform1i(glGetUniformLocation(program, "mainTex"), 0);
+		glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
+
+		glUniform1i(glGetUniformLocation(program, "dirt"), 2);
+		glUniform1i(glGetUniformLocation(program, "sand"), 3);
+		glUniform1i(glGetUniformLocation(program, "grass"), 4);
+		glUniform1i(glGetUniformLocation(program, "rock"), 5);
+		glUniform1i(glGetUniformLocation(program, "snow"), 6);
+	}
+
 	void renderTerrain(Camera _cam, glm::vec3 _lightPos, glm::mat4 _projection) {
 		glEnable(GL_DEPTH);
 		glEnable(GL_DEPTH_TEST);
@@ -44,13 +65,9 @@ class Terrain
 
 		glUseProgram(program);
 
-		//set texture channels
-		glUniform1i(glGetUniformLocation(program, "mainTex"), 0);
-		glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
-
 		//matrices
 		glm::mat4 world = glm::mat4(1.0f);
-		world = glm::translate(world, glm::vec3(-500, -500, -500));
+		world = glm::translate(world, glm::vec3(-500, 0, -500));
 		//world = glm::scale(world, glm::vec3(0.5f, 0.5f, 0.5f));
 
 		glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(world));
@@ -60,13 +77,22 @@ class Terrain
 		glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1, glm::value_ptr(_lightPos));
 		glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(_cam.Position));
 		
-		//textures
-		//glActiveTexture(GL_TEXTURE0);
-		//glBindTexture(GL_TEXTURE_2D, tex);
+		//bind textures
 		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, heightmapID);
 		glActiveTexture(GL_TEXTURE1);
 		glBindTexture(GL_TEXTURE_2D, normalmapID);
+
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, dirt);
+		glActiveTexture(GL_TEXTURE3);
+		glBindTexture(GL_TEXTURE_2D, sand);
+		glActiveTexture(GL_TEXTURE4);
+		glBindTexture(GL_TEXTURE_2D, grass);
+		glActiveTexture(GL_TEXTURE5);
+		glBindTexture(GL_TEXTURE_2D, rock);
+		glActiveTexture(GL_TEXTURE6);
+		glBindTexture(GL_TEXTURE_2D, snow);
 
 		//rendering
 		glBindVertexArray(terrainVAO);
