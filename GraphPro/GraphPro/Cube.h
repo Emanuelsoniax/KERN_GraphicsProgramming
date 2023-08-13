@@ -36,7 +36,7 @@ class Cube
         cubePosition = _position;
     }
 
-    void renderCube(Camera _cam, glm::vec3 _lightDir, glm::mat4 _projection) {
+    void renderCube(Camera _cam, glm::vec3 _lightPos, glm::mat4 _projection) {
         
         glEnable(GL_DEPTH_TEST);
         glEnable(GL_CULL_FACE);
@@ -53,14 +53,14 @@ class Cube
         //matrices
         glm::mat4 world = glm::mat4(1.0f);
         world = glm::rotate(world, glm::radians(45.0f), glm::vec3(0, 1, 0));
-        world = glm::scale(world, glm::vec3(1, 1, 1));
-        world = glm::translate(world, _cam.Position);
+        //world = glm::translate(world, glm::vec3(0,0,0));
+        world = glm::scale(world, glm::vec3(10, 10, 10));
 
         glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(world));
         glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(_cam.GetViewMatrix()));
         glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(_projection));
 
-        glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1, glm::value_ptr(_lightDir));
+        glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1, glm::value_ptr(_lightPos));
         glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(_cam.Position));
 
         //bind textures
@@ -71,13 +71,7 @@ class Cube
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, specular);
 
-        //// create transformations
-        glm::mat4 transform = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
-        transform = glm::translate(transform, cubePosition);
-        //transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
 
-        // get matrix's uniform location and set matrix
-        glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(transform));
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, boxIndexCount, GL_UNSIGNED_INT, 0);
 

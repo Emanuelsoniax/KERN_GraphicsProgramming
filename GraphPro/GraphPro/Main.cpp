@@ -32,7 +32,7 @@ GLuint loadTexture(const char* path, int comp = 0);
 void loadFile(const char* filename, char*& output);
 
 //program IDs
-GLuint simpleProgram, skyProgram, terrainProgram, modelProgram;
+GLuint simpleProgram, skyProgram, terrainProgram, modelProgram, toonProgram;
 
 const int WIDTH = 1280, HEIGHT = 720;
 
@@ -43,7 +43,7 @@ float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
 
 //light
-glm::vec3 lightPosition = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
+glm::vec3 lightPosition = glm::normalize(glm::vec3(-1000.5f, -1000.5f, -1000.5f));
 
 glm::mat4 view, projection;
 
@@ -54,7 +54,7 @@ float lastFrame = 0.0f;
 
 //models
 Model* backpack;
-void renderModel(Model* model);
+void renderModel(Model* model, GLuint program);
 
 
 int main()
@@ -65,20 +65,20 @@ int main()
         return result;
     }
     
-    //stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(true);
 
     camera.MovementSpeed = 100;
 
     createShaders();
 
     Skybox skybox = Skybox(skyProgram);
-    Cube crate = Cube(simpleProgram, glm::vec3(0, 0, 0), loadTexture("textures/container2.png"), loadTexture("textures/container2_normal.png"), loadTexture("textures/container2_specular.png"));
+    Cube crate = Cube(toonProgram, glm::vec3(0, 0, 0), loadTexture("textures/container2.png"), loadTexture("textures/container2_normal.png"), loadTexture("textures/container2_specular.png"));
     Cube brick = Cube(simpleProgram, glm::vec3(-1.5f, -2.2f, -2.5f), loadTexture("textures/brick.png"), loadTexture("textures/brick_normal.png"));
     Terrain terrain = Terrain(terrainProgram, "textures/Heightmap2.png", loadTexture("textures/Heightmap2_normal.png"), 250.0f, 5.0f);
 
     terrain.assignTextures(loadTexture("textures/dirt.jpg"), loadTexture("textures/sand.jpg"), loadTexture("textures/grass.png", 4), loadTexture("textures/rock.jpg"), loadTexture("textures/snow.jpg"));
 
-    backpack = new Model("models/obj/wooden watch tower2.obj");
+    //backpack = new Model("models/obj/wooden watch tower2.obj");
 
 
     //create gl viewport
@@ -103,10 +103,11 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         skybox.renderSkyBox(camera, lightPosition, projection);
-        terrain.renderTerrain(camera, lightPosition, projection);
-        renderModel(backpack);
+        //terrain.renderTerrain(camera, lightPosition, projection);
+        //renderModel(backpack, toonProgram);
         //brick.renderCube(camera, lightDirection, projection);
-        //crate.renderCube(camera, lightPosition, projection);
+
+        crate.renderCube(camera, lightPosition, projection);
 
         //buffers swappen
         glfwSwapBuffers(window);
@@ -120,33 +121,36 @@ int main()
 }
 
 
-void renderModel(Model* model) {
+void renderModel(Model* model, GLuint program) {
 
     glEnable(GL_DEPTH);
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
     glCullFace(GL_BACK);
-    glUseProgram(modelProgram);
+    glUseProgram(program);
     //set texture channels
+    glUniform1i(glGetUniformLocation(program, "mainTex"), 0);
+    glUniform1i(glGetUniformLocation(program, "normalTex"), 1);
+    glUniform1i(glGetUniformLocation(program, "specularTex"), 2);
 
     //matrices
     glm::mat4 world = glm::mat4(1.0f);
-    world = glm::translate(world, glm::vec3(0,0,0));
+    //world = glm::translate(world, glm::vec3(0,-100,0));
     world = glm::scale(world, glm::vec3(10, 10, 10));
 
     float t = glfwGetTime();
     //glm::vec3 rot = glm::vec3(0, t, 0);
     //world = world * glm::mat4(glm::quat(rot));
 
-    glUniformMatrix4fv(glGetUniformLocation(modelProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
-    glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
-    glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+    glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(world));
+    glUniformMatrix4fv(glGetUniformLocation(program, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(program, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-    glUniform3fv(glGetUniformLocation(modelProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
-    glUniform3fv(glGetUniformLocation(modelProgram, "cameraPosition"), 1, glm::value_ptr(camera.Position));
+    glUniform3fv(glGetUniformLocation(program, "lightPosition"), 1, glm::value_ptr(lightPosition));
+    glUniform3fv(glGetUniformLocation(program, "cameraPosition"), 1, glm::value_ptr(camera.Position));
 
-    model->Draw(modelProgram);
+    model->Draw(program);
 
     glDisable(GL_CULL_FACE);
     glDisable(GL_DEPTH);
@@ -251,6 +255,7 @@ void createShaders()
     createProgram(skyProgram, "shaders/skyVertexShader.shader", "shaders/skyFragmentShader.shader");
     createProgram(terrainProgram, "shaders/terrainVertexShader.shader", "shaders/terrainFragmentShader.shader");
     createProgram(modelProgram, "shaders/model.vs", "shaders/model.fs");
+    createProgram(toonProgram, "shaders/toonvs.shader", "shaders/toonfs.shader");
 
     glUseProgram(modelProgram);
     //set texture channels

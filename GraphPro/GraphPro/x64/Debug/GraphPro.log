@@ -1,6 +1,4 @@
 ﻿  Main.cpp
-D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\GraphPro\Main.cpp(138,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\GraphPro\Main.cpp(326,20): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
-  Terrain.cpp
-  Generating Code...
+D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\GraphPro\Main.cpp(142,13): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\GraphPro\Main.cpp(331,20): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
   GraphPro.vcxproj -> D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\x64\Debug\GraphPro.exe

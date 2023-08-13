@@ -62,6 +62,12 @@
     <None Include="shaders\model.vs">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="shaders\toonfs.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\toonvs.shader">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">

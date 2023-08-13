@@ -171,6 +171,8 @@
     <None Include="shaders\skyVertexShader.shader" />
     <None Include="shaders\terrainFragmentShader.shader" />
     <None Include="shaders\terrainVertexShader.shader" />
+    <None Include="shaders\toonfs.shader" />
+    <None Include="shaders\toonvs.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h" />
