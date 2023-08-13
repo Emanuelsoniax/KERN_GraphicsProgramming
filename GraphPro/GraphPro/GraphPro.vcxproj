@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -163,6 +163,8 @@
     <ClCompile Include="Terrain.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="shaders\model.fs" />
+    <None Include="shaders\model.vs" />
     <None Include="shaders\simpleFragment.shader" />
     <None Include="shaders\simpleVertext.shader" />
     <None Include="shaders\skyFragmentShader.shader" />
@@ -173,6 +175,8 @@
   <ItemGroup>
     <ClInclude Include="camera.h" />
     <ClInclude Include="Cube.h" />
+    <ClInclude Include="mesh.h" />
+    <ClInclude Include="model.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="Terrain.h" />

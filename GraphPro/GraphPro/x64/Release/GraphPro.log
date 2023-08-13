@@ -1,0 +1,12 @@
+﻿  camera.cpp
+  Cube.cpp
+  Main.cpp
+D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\GraphPro\Main.cpp(312,20): warning C4244: 'initializing': conversion from 'std::streamoff' to 'int', possible loss of data
+  Skybox.cpp
+  Terrain.cpp
+  glad.c
+  Generating code
+  Previous IPDB not found, fall back to full compilation.
+  All 788 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+  GraphPro.vcxproj -> D:\Emmie\Documents\Game Development\2\KERN_Graphics Programming\KERN_GraphicsProgramming\GraphPro\x64\Release\GraphPro.exe

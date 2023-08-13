@@ -67,7 +67,7 @@ class Terrain
 
 		//matrices
 		glm::mat4 world = glm::mat4(1.0f);
-		world = glm::translate(world, glm::vec3(-500, 0, -500));
+		world = glm::translate(world, glm::vec3(-700, -20, -700));
 		//world = glm::scale(world, glm::vec3(0.5f, 0.5f, 0.5f));
 
 		glUniformMatrix4fv(glGetUniformLocation(program, "world"), 1, GL_FALSE, glm::value_ptr(world));

@@ -56,6 +56,12 @@
     <None Include="shaders\terrainVertexShader.shader">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="shaders\model.fs">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\model.vs">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
@@ -71,6 +77,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Terrain.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

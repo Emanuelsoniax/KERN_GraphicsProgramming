@@ -12,6 +12,7 @@
 #include "Skybox.h"
 #include "Cube.h"
 #include "Terrain.h"
+#include "model.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -31,25 +32,30 @@ GLuint loadTexture(const char* path, int comp = 0);
 void loadFile(const char* filename, char*& output);
 
 //program IDs
-GLuint simpleProgram, skyProgram, terrainProgram;
+GLuint simpleProgram, skyProgram, terrainProgram, modelProgram;
 
 const int WIDTH = 1280, HEIGHT = 720;
 
 // camera
-Camera camera(glm::vec3(0.0f, 500, 0.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 0.0f));
 float lastX = WIDTH / 2.0f;
 float lastY = HEIGHT / 2.0f;
 bool firstMouse = true;
 
 //light
-glm::vec3 lightPosition = glm::normalize(glm::vec3(-0.5f, 0.5f, -0.5f));
+glm::vec3 lightPosition = glm::normalize(glm::vec3(-0.5f, -0.5f, -0.5f));
 
 glm::mat4 view, projection;
-
 
 // timing
 float deltaTime = 0.0f;	// time between current frame and last frame
 float lastFrame = 0.0f;
+
+
+//models
+Model* backpack;
+void renderModel(Model* model);
+
 
 int main()
 {
@@ -59,6 +65,8 @@ int main()
         return result;
     }
     
+    //stbi_set_flip_vertically_on_load(true);
+
     camera.MovementSpeed = 100;
 
     createShaders();
@@ -69,6 +77,9 @@ int main()
     Terrain terrain = Terrain(terrainProgram, "textures/Heightmap2.png", loadTexture("textures/Heightmap2_normal.png"), 250.0f, 5.0f);
 
     terrain.assignTextures(loadTexture("textures/dirt.jpg"), loadTexture("textures/sand.jpg"), loadTexture("textures/grass.png", 4), loadTexture("textures/rock.jpg"), loadTexture("textures/snow.jpg"));
+
+    backpack = new Model("models/obj/wooden watch tower2.obj");
+
 
     //create gl viewport
     glViewport(0, 0, WIDTH, HEIGHT);
@@ -93,6 +104,7 @@ int main()
 
         skybox.renderSkyBox(camera, lightPosition, projection);
         terrain.renderTerrain(camera, lightPosition, projection);
+        renderModel(backpack);
         //brick.renderCube(camera, lightDirection, projection);
         //crate.renderCube(camera, lightPosition, projection);
 
@@ -106,6 +118,42 @@ int main()
     glfwTerminate();
     return 0;
 }
+
+
+void renderModel(Model* model) {
+
+    glEnable(GL_DEPTH);
+    glEnable(GL_DEPTH_TEST);
+    glEnable(GL_CULL_FACE);
+
+    glCullFace(GL_BACK);
+    glUseProgram(modelProgram);
+    //set texture channels
+
+    //matrices
+    glm::mat4 world = glm::mat4(1.0f);
+    world = glm::translate(world, glm::vec3(0,0,0));
+    world = glm::scale(world, glm::vec3(10, 10, 10));
+
+    float t = glfwGetTime();
+    //glm::vec3 rot = glm::vec3(0, t, 0);
+    //world = world * glm::mat4(glm::quat(rot));
+
+    glUniformMatrix4fv(glGetUniformLocation(modelProgram, "world"), 1, GL_FALSE, glm::value_ptr(world));
+    glUniformMatrix4fv(glGetUniformLocation(modelProgram, "view"), 1, GL_FALSE, glm::value_ptr(camera.GetViewMatrix()));
+    glUniformMatrix4fv(glGetUniformLocation(modelProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+    glUniform3fv(glGetUniformLocation(modelProgram, "lightPosition"), 1, glm::value_ptr(lightPosition));
+    glUniform3fv(glGetUniformLocation(modelProgram, "cameraPosition"), 1, glm::value_ptr(camera.Position));
+
+    model->Draw(modelProgram);
+
+    glDisable(GL_CULL_FACE);
+    glDisable(GL_DEPTH);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+}
+
 
 void processInput(GLFWwindow* window)
 {
@@ -202,6 +250,17 @@ void createShaders()
     createProgram(simpleProgram, "shaders/simpleVertext.shader", "shaders/simpleFragment.shader");
     createProgram(skyProgram, "shaders/skyVertexShader.shader", "shaders/skyFragmentShader.shader");
     createProgram(terrainProgram, "shaders/terrainVertexShader.shader", "shaders/terrainFragmentShader.shader");
+    createProgram(modelProgram, "shaders/model.vs", "shaders/model.fs");
+
+    glUseProgram(modelProgram);
+    //set texture channels
+
+    glUniform1i(glGetUniformLocation(modelProgram, "texture_diffuse1"), 0);
+    glUniform1i(glGetUniformLocation(modelProgram, "texture_specular1"), 1);
+    glUniform1i(glGetUniformLocation(modelProgram, "texture_normal1"), 2);
+    glUniform1i(glGetUniformLocation(modelProgram, "texture_roughness1"), 3);
+    glUniform1i(glGetUniformLocation(modelProgram, "texture_ao1"), 4);
+
 }
 
 void createProgram(GLuint& programID, const char* vertex, const char* fragment) {
